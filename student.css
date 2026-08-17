@@ -1,0 +1,92 @@
+:root {
+    --bg-space: #090d16;
+    --surface-card: #111827;
+    --surface-input: #1f293d;
+    --border-subtle: #2d3748;
+    --border-focus: #38bdf8;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary-accent: #22d3ee;
+    --primary-hover: #06b6d4;
+    --shadow-glow: 0 0 25px rgba(34, 211, 238, 0.15);
+}
+
+body {
+    background-color: var(--bg-space);
+    color: var(--text-main);
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.navbar {
+    background-color: var(--surface-card);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.card {
+    background-color: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    border-radius: 12px;
+    box-shadow: var(--shadow-glow);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(34, 211, 238, 0.1);
+    color: var(--primary-accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.btn-action {
+    background-color: var(--surface-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    background-color: var(--primary-accent);
+    color: var(--bg-space);
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+.list-group-item {
+    background-color: transparent;
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+    padding: 14px 16px;
+}
+
+.badge-cyan {
+    background-color: rgba(34, 211, 238, 0.15);
+    color: var(--primary-accent);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+.text-custom-muted {
+    color: var(--text-muted);
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+.event-date-box {
+    background-color: var(--surface-input);
+    border: 1px solid var(--border-subtle);
+    min-width: 60px;
+}

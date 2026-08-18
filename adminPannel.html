@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard - System Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="pannel.css">
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
+       connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* https://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; 
+       style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; 
+       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com blob:; 
+       font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
+       img-src 'self' data: https:;">
+
+</head>
+
+<body class="bg-dark text-light">
+
+    <nav class="navbar navbar-dark bg-dark border-bottom border-secondary px-3">
+        <a class="navbar-brand text-info fw-bold" href="#"><i class="fa-solid fa-user-shield me-2"></i>Admin Control
+            Panel</a>
+        <div class="d-flex align-items-center gap-2">
+            <span id="adminBadge" class="badge bg-danger">Administrator</span>
+            <button class="btn btn-outline-danger btn-sm fw-bold" onclick="logout()"><i
+                    class="fa-solid fa-right-from-bracket me-1"></i>Logout</button>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-secondary text-light p-3 shadow-lg border-subtle">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-uppercase text-secondary fw-bold">Total Posts</small>
+                            <h2 id="totalPostsCount" class="text-info fw-bold mb-0">0</h2>
+                        </div>
+                        <i class="fa-solid fa-newspaper fs-1 text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-secondary text-light p-3 shadow-lg border-subtle">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-uppercase text-secondary fw-bold">Total Comments</small>
+                            <h2 id="totalCommentsCount" class="text-info fw-bold mb-0">0</h2>
+                        </div>
+                        <i class="fa-solid fa-comments fs-1 text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-secondary text-light p-3 shadow-lg border-subtle">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-uppercase text-secondary fw-bold">Active System Status</small>
+                            <h2 class="text-success fw-bold mb-0">Online</h2>
+                        </div>
+                        <i class="fa-solid fa-server fs-1 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card bg-secondary text-light p-3 shadow-lg">
+                    <h4 id="formTitle" class="text-info fw-bold mb-3"><i class="fa-solid fa-bullhorn me-2"></i>Publish
+                        System Announcement</h4>
+                    <form id="postForm" onsubmit="post(event)">
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Announcement Title</label>
+                            <input type="text" id="title" class="form-control bg-dark text-light border-secondary"
+                                placeholder="Enter system announcement title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Announcement Content</label>
+                            <textarea id="description" class="form-control bg-dark text-light border-secondary" rows="3"
+                                placeholder="Write broadcast details..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Attachment Image</label>
+                            <div class="border border-secondary rounded p-3 text-center bg-dark"
+                                style="cursor: pointer;" onclick="document.getElementById('background-image').click()">
+                                <i class="fa-solid fa-cloud-arrow-up fs-4 text-info"></i>
+                                <p id="uploadText" class="mb-0 small text-info mt-1">Upload Attachment</p>
+                                <input type="file" id="background-image" class="d-none" accept="image/*"
+                                    onchange="previewImage(this)">
+                            </div>
+                            <div id="imagePreviewContainer" class="mt-2 text-center d-none">
+                                <img id="imagePreview" src="" class="img-fluid rounded" style="max-height: 150px;"
+                                    alt="Preview">
+                            </div>
+                        </div>
+                        <button type="submit" id="postBtn" class="btn btn-info w-100 fw-bold">Broadcast Post</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-info mb-0"><i class="fa-solid fa-list-check me-2"></i>System Feed &
+                        Moderation</h5>
+                    <button class="btn btn-sm btn-outline-info" onclick="fetchPosts()"><i
+                            class="fa-solid fa-rotate me-1"></i>Refresh</button>
+                </div>
+
+                <div class="input-group mb-3">
+                    <input type="text" id="searchInput" class="form-control bg-dark text-light border-secondary"
+                        placeholder="Search posts or users..." onkeyup="searchPosts()">
+                    <button class="btn btn-info"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <div id="posts"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="pannel.js"></script>
+</body>
+
+</html>

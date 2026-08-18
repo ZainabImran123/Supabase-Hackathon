@@ -12,9 +12,9 @@ let currentUser = null;
 let editPostId = null;
 
 function getUserDisplayName(user) {
-    if (!user) return "Anonymous";
+    if (!user) return "Admin System";
     if (typeof user === 'string') return user.split('@')[0];
-    return user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : "Anonymous");
+    return user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : "Admin System");
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -28,24 +28,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     currentUser = session.user;
-
-    const charBtn = document.getElementById("char");
-    if (charBtn && currentUser) {
-        const name = getUserDisplayName(currentUser);
-        charBtn.innerText = name.charAt(0).toUpperCase();
-    }
-
     fetchPosts();
+    fetchMetrics();
 });
 
-function toggleMenu() {
-    const menu = document.getElementById("dropdownMenu");
-    if (menu) menu.classList.toggle("show");
+async function fetchMetrics() {
+    if (!_supabase) return;
+
+    try {
+        const { count: postsCount } = await _supabase
+            .from("posts")
+            .select("*", { count: 'exact', head: true });
+
+        const { count: commentsCount } = await _supabase
+            .from("comments")
+            .select("*", { count: 'exact', head: true });
+
+        const postsCounterElem = document.getElementById("totalPostsCount");
+        const commentsCounterElem = document.getElementById("totalCommentsCount");
+
+        if (postsCounterElem) postsCounterElem.innerText = postsCount || 0;
+        if (commentsCounterElem) commentsCounterElem.innerText = commentsCount || 0;
+    } catch (err) {
+        console.error("Error fetching system metrics:", err);
+    }
 }
 
 async function logout() {
     if (_supabase) await _supabase.auth.signOut();
-    window.location.href = "login.html";
+    window.location.href = "admin.html";
 }
 
 function previewImage(input) {
@@ -60,11 +71,11 @@ function previewImage(input) {
             if (previewContainer) previewContainer.classList.remove("d-none");
         };
         reader.readAsDataURL(input.files[0]);
-        if (uploadText) uploadText.innerText = "Change Image";
+        if (uploadText) uploadText.innerText = "Change Attachment";
     } else {
         if (previewImage) previewImage.src = "";
         if (previewContainer) previewContainer.classList.add("d-none");
-        if (uploadText) uploadText.innerText = "Add Image";
+        if (uploadText) uploadText.innerText = "Upload Attachment";
     }
 }
 
@@ -84,7 +95,7 @@ async function post(event) {
     let imageUrl = null;
 
     Swal.fire({
-        title: editPostId ? "Updating Post..." : "Publishing Post...",
+        title: editPostId ? "Updating Broadcast..." : "Publishing Broadcast...",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
     });
@@ -105,7 +116,7 @@ async function post(event) {
             imageUrl = urlData.publicUrl;
         }
 
-        const authorName = getUserDisplayName(currentUser);
+        const authorName = "ADMIN: " + getUserDisplayName(currentUser);
 
         if (editPostId) {
             const updateData = { title, description };
@@ -118,12 +129,12 @@ async function post(event) {
 
             if (error) throw error;
 
-            Swal.fire("Updated!", "Your post has been updated.", "success");
+            Swal.fire("Updated!", "Post updated successfully by Admin.", "success");
             editPostId = null;
             const formTitle = document.getElementById("formTitle");
             const postBtn = document.getElementById("postBtn");
-            if (formTitle) formTitle.innerText = "Create Post";
-            if (postBtn) postBtn.innerText = "Publish Post";
+            if (formTitle) formTitle.innerText = "Publish System Announcement";
+            if (postBtn) postBtn.innerText = "Broadcast Post";
         } else {
             const { error } = await _supabase
                 .from("posts")
@@ -138,11 +149,12 @@ async function post(event) {
 
             if (error) throw error;
 
-            Swal.fire("Published!", "Your post is live.", "success");
+            Swal.fire("Broadcasted!", "System announcement is live.", "success");
         }
 
         resetForm();
         fetchPosts();
+        fetchMetrics();
 
     } catch (error) {
         Swal.fire("Error", error.message, "error");
@@ -155,7 +167,7 @@ function resetForm() {
     const previewContainer = document.getElementById("imagePreviewContainer");
     if (previewContainer) previewContainer.classList.add("d-none");
     const uploadText = document.getElementById("uploadText");
-    if (uploadText) uploadText.innerText = "Add Image";
+    if (uploadText) uploadText.innerText = "Upload Attachment";
 }
 
 async function fetchPosts() {
@@ -175,56 +187,46 @@ async function fetchPosts() {
         postsContainer.innerHTML = "";
 
         if (!posts || posts.length === 0) {
-            postsContainer.innerHTML = '<p class="text-secondary text-center py-4">No posts found.</p>';
+            postsContainer.innerHTML = '<p class="text-secondary text-center py-4">No system posts found.</p>';
             return;
         }
 
         for (const item of posts) {
             const card = document.createElement("div");
-            card.className = "card post-card mb-4 shadow-lg";
+            card.className = "card post-card mb-4 shadow-lg border-secondary";
 
-            // Forced to true so icons display for all database entries
-            const isOwner = true;
-            const authorDisplayName = item.author_name || item.user_name || (item.user_email ? item.user_email.split('@')[0] : "Anonymous");
+            const authorDisplayName = item.author_name || item.user_name || (item.user_email ? item.user_email.split('@')[0] : "Anonymous User");
 
             card.innerHTML = `
-        <div class="card-header d-flex justify-content-between align-items-center py-2 px-3">
-          <small class="text-info fw-bold"><i class="fa-solid fa-user me-1"></i>${authorDisplayName}</small>
-          ${isOwner ? `
-            <div class="action-buttons">
-              <button class="btn btn-sm text-info p-1 me-2 edit-btn" title="Edit Post" onclick="editPost('${item.id}', '${escapeQuotes(item.title)}', '${escapeQuotes(item.description)}')">
-                <i class="fa-solid fa-pen-to-square fs-6"></i>
-              </button>
-              <button class="btn btn-sm text-danger p-1 delete-btn" title="Delete Post" onclick="deletePost('${item.id}')">
-                <i class="fa-solid fa-trash fs-6"></i>
-              </button>
-            </div>
-          ` : ""}
+        <div class="card-header d-flex justify-content-between align-items-center py-2 px-3 bg-secondary bg-opacity-25">
+          <small class="text-info fw-bold"><i class="fa-solid fa-user-gear me-1"></i>${authorDisplayName}</small>
+          <div class="action-buttons">
+            <button class="btn btn-sm text-info p-1 me-2 edit-btn" title="Edit Content" onclick="editPost('${item.id}', '${escapeQuotes(item.title)}', '${escapeQuotes(item.description)}')">
+              <i class="fa-solid fa-pen-to-square fs-5"></i>
+            </button>
+            <button class="btn btn-sm text-danger p-1 delete-btn" title="Delete Content" onclick="deletePost('${item.id}')">
+              <i class="fa-solid fa-trash fs-5"></i>
+            </button>
+          </div>
         </div>
         ${item.image_url ? `
           <div class="text-center bg-dark p-2">
-            <img src="${item.image_url}" class="img-fluid rounded" style="max-height: 180px; object-fit: contain;" alt="Post image">
+            <img src="${item.image_url}" class="img-fluid rounded" style="max-height: 180px; object-fit: contain;" alt="Post attachment">
           </div>
         ` : ""}
         <div class="card-body">
           <h5 class="card-title post-title fw-bold text-info">${item.title}</h5>
           <p class="card-text post-body text-light">${item.description || ""}</p>
-          
-          <div class="d-flex align-items-center mb-3">
-            <button class="btn btn-sm btn-outline-danger me-2 heart-btn" onclick="toggleLike(this, '${item.id}')">
-              <i class="fa-regular fa-heart me-1"></i><span class="like-text">Like</span>
-            </button>
-          </div>
 
           <div class="mt-3 pt-3 border-top border-secondary">
-            <h6 class="small fw-bold text-secondary mb-2"><i class="fa-regular fa-comments me-1"></i> Comments</h6>
+            <h6 class="small fw-bold text-secondary mb-2"><i class="fa-solid fa-comments me-1"></i> Admin Moderated Comments</h6>
             
             <div id="comments-list-${item.id}" class="mb-3">
               <small class="text-muted d-block mb-1">Loading comments...</small>
             </div>
 
             <div class="input-group input-group-sm">
-              <input type="text" id="comment-input-${item.id}" class="form-control bg-dark text-light border-secondary" placeholder="Write a comment...">
+              <input type="text" id="comment-input-${item.id}" class="form-control bg-dark text-light border-secondary" placeholder="Write admin reply...">
               <button class="btn btn-info fw-bold" onclick="addComment('${item.id}')">
                 <i class="fa-solid fa-paper-plane"></i>
               </button>
@@ -237,31 +239,8 @@ async function fetchPosts() {
             fetchComments(item.id);
         }
 
-        if (typeof animatePollCards === 'function') {
-            animatePollCards();
-        }
-
     } catch (error) {
-        postsContainer.innerHTML = `<p class="text-danger">Failed to load posts: ${error.message}</p>`;
-    }
-}
-
-function toggleLike(btn, postId) {
-    const icon = btn.querySelector("i");
-    const label = btn.querySelector(".like-text");
-
-    if (icon && icon.classList.contains("fa-regular")) {
-        icon.classList.remove("fa-regular");
-        icon.classList.add("fa-solid");
-        btn.classList.remove("btn-outline-danger");
-        btn.classList.add("btn-danger");
-        if (label) label.innerText = "Liked";
-    } else if (icon) {
-        icon.classList.remove("fa-solid");
-        icon.classList.add("fa-regular");
-        btn.classList.remove("btn-danger");
-        btn.classList.add("btn-outline-danger");
-        if (label) label.innerText = "Like";
+        postsContainer.innerHTML = `<p class="text-danger">Failed to load system posts: ${error.message}</p>`;
     }
 }
 
@@ -286,28 +265,29 @@ function editPost(id, title, description) {
     const formTitle = document.getElementById("formTitle");
     const postBtn = document.getElementById("postBtn");
 
-    if (formTitle) formTitle.innerText = "Edit Post";
-    if (postBtn) postBtn.innerText = "Update Post";
+    if (formTitle) formTitle.innerText = "Edit Moderated Content";
+    if (postBtn) postBtn.innerText = "Update Broadcast";
 
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function deletePost(id) {
     const result = await Swal.fire({
-        title: "Delete this post?",
-        text: "This action cannot be undone.",
+        title: "Delete this post as Admin?",
+        text: "This action will permanently purge the record.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#ef4444",
-        confirmButtonText: "Delete"
+        confirmButtonText: "Purge Post"
     });
 
     if (result.isConfirmed) {
         try {
             const { error } = await _supabase.from("posts").delete().eq("id", id);
             if (error) throw error;
-            Swal.fire("Deleted", "Post removed successfully.", "success");
+            Swal.fire("Purged", "Post removed by Admin.", "success");
             fetchPosts();
+            fetchMetrics();
         } catch (error) {
             Swal.fire("Error", error.message, "error");
         }
@@ -328,25 +308,38 @@ async function fetchComments(postId) {
         if (error) throw error;
 
         if (!comments || comments.length === 0) {
-            commentsList.innerHTML = '<span class="text-muted small">No comments yet.</span>';
+            commentsList.innerHTML = '<span class="text-muted small">No comments logged.</span>';
             return;
         }
 
         commentsList.innerHTML = comments.map(c => {
             const commenterName = c.author_name || c.user_name || (c.user_email ? c.user_email.split('@')[0] : 'Anonymous');
             return `
-      <div class="comment-box p-2 mb-2">
-        <div class="d-flex justify-content-between align-items-center">
+      <div class="comment-box p-2 mb-2 d-flex justify-content-between align-items-center">
+        <div>
           <strong class="text-info small" style="font-size: 11px;">${commenterName}</strong>
-          <span class="text-muted" style="font-size: 10px;">${new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <p class="mb-0 text-light small">${c.comment_text || c.content || c.comment || ''}</p>
         </div>
-        <p class="mb-0 text-light small">${c.comment_text || c.content || c.comment || ''}</p>
+        <button class="btn btn-sm text-danger p-0 ms-2" title="Delete Comment" onclick="deleteComment('${c.id}', '${postId}')">
+            <i class="fa-solid fa-xmark fs-6"></i>
+        </button>
       </div>
     `;
         }).join("");
 
     } catch (error) {
         commentsList.innerHTML = `<span class="text-danger small">Error loading comments.</span>`;
+    }
+}
+
+async function deleteComment(commentId, postId) {
+    try {
+        const { error } = await _supabase.from("comments").delete().eq("id", commentId);
+        if (error) throw error;
+        fetchComments(postId);
+        fetchMetrics();
+    } catch (error) {
+        Swal.fire("Error", error.message, "error");
     }
 }
 
@@ -357,7 +350,7 @@ async function addComment(postId) {
 
     if (!commentText) return;
 
-    const authorName = getUserDisplayName(currentUser);
+    const authorName = "ADMIN: " + getUserDisplayName(currentUser);
 
     try {
         const { error } = await _supabase
@@ -373,6 +366,7 @@ async function addComment(postId) {
 
         input.value = "";
         fetchComments(postId);
+        fetchMetrics();
 
     } catch (error) {
         Swal.fire("Error", error.message, "error");

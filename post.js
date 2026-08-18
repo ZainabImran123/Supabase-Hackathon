@@ -131,7 +131,8 @@ async function post(event) {
                     description,
                     image_url: imageUrl,
                     user_id: currentUser.id,
-                    user_name: authorName
+                    user_name: authorName,   // In case your column is named user_name
+                    author_name: authorName  // Satisfies the NOT NULL constraint on author_name
                 }]);
 
             if (error) throw error;
@@ -146,6 +147,8 @@ async function post(event) {
         Swal.fire("Error", error.message, "error");
     }
 }
+
+
 
 function resetForm() {
     document.getElementById("postForm").reset();

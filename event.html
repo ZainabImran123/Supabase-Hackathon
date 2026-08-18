@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="event.css">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark px-4 py-2">
+        <a class="navbar-brand fw-bold text-info" href="#"><i class="fa-solid fa-calendar-days me-2"></i>Events
+            Portal</a>
+        <div class="ms-auto position-relative">
+            <button id="char" class="avatar-btn" onclick="toggleMenu()">U</button>
+            <div id="dropdownMenu" class="dropdown-menu-custom">
+                <button onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5 text-light">
+        <div class="card bg-dark text-light border-secondary p-4 shadow-lg mb-5">
+            <h4 class="text-info fw-bold mb-4"><i class="fa-solid fa-calendar-plus me-2"></i>Create Event</h4>
+            <form id="eventForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" id="eventTitle" class="form-control" placeholder="Event Title" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="eventDate" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="time" id="eventTime" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" id="eventLocation" class="form-control" placeholder="Location" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="file" id="eventImage" class="form-control" accept="image/*"
+                            onchange="previewEventImage(this)">
+                    </div>
+                    <div id="eventImagePreviewContainer" class="col-12 text-center d-none">
+                        <img id="eventImagePreview" class="image-preview my-2" src="" alt="Preview">
+                    </div>
+                    <div class="col-12">
+                        <textarea id="eventDescription" class="form-control" rows="3" placeholder="Event Description"
+                            required></textarea>
+                    </div>
+                    <div class="col-12 text-end">
+                        <button type="submit" id="publishBtn" class="btn btn-info fw-bold">
+                            <i class="fa-solid fa-plus me-1"></i>Publish Event
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div class="btn-group">
+                <button class="btn btn-info event-filter-btn" onclick="filterEvents('upcoming', this)">Upcoming</button>
+                <button class="btn btn-outline-info event-filter-btn" onclick="filterEvents('all', this)">All
+                    Events</button>
+                <button class="btn btn-outline-info event-filter-btn" onclick="filterEvents('past', this)">Past</button>
+            </div>
+            <div class="input-group" style="max-width: 300px;">
+                <input type="text" id="searchEventInput" class="form-control" placeholder="Search events..."
+                    onkeyup="searchEvents()">
+            </div>
+        </div>
+
+        <div id="eventsContainer" class="row"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="event.js"></script>
+</body>
+
+</html>

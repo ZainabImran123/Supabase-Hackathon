@@ -66,7 +66,7 @@ function setupNavigationButtons() {
 
     if (findPartnerBtn) {
         findPartnerBtn.addEventListener('click', () => {
-            window.location.href = "partner.html";
+            window.location.href = "poll.html";
         });
     }
 }

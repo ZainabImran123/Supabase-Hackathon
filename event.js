@@ -20,13 +20,16 @@ function getUserDisplayName(user) {
 document.addEventListener("DOMContentLoaded", async () => {
     if (!_supabase) return;
 
+    // 1. Fetch active session directly from local storage
     const { data: { session }, error } = await _supabase.auth.getSession();
 
+    // 2. Redirect to index.html ONLY if no session exists
     if (error || !session) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
     }
 
+    // 3. Populate current user state
     currentUser = session.user;
 
     const charBtn = document.getElementById("char");
@@ -37,10 +40,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const eventForm = document.getElementById("eventForm");
     if (eventForm) {
+        eventForm.removeEventListener("submit", createEvent);
         eventForm.addEventListener("submit", createEvent);
     }
 
     fetchEvents();
+
+    // 4. Handle ONLY explicit sign-outs (prevents initial auth event redirect loops)
+    _supabase.auth.onAuthStateChange((event, currentSession) => {
+        if (event === "SIGNED_OUT") {
+            window.location.href = "index.html";
+        }
+    });
 });
 
 function toggleMenu() {
@@ -50,7 +61,7 @@ function toggleMenu() {
 
 async function logout() {
     if (_supabase) await _supabase.auth.signOut();
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 }
 
 function previewEventImage(input) {
@@ -137,7 +148,7 @@ async function createEvent(e) {
                 .from("post-images")
                 .getPublicUrl(fileName);
 
-            imageUrl = urlData.publicUrl;
+            imageUrl = urlData?.publicUrl || urlData?.publicURL || null;
         }
 
         const payload = {

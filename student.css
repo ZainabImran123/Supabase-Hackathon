@@ -2,6 +2,7 @@
     --bg-space: #090d16;
     --surface-card: #111827;
     --surface-input: #1f293d;
+    --surface-hover: #27354f;
     --border-subtle: #2d3748;
     --border-focus: #38bdf8;
     --text-main: #f8fafc;
@@ -89,4 +90,40 @@ body {
     background-color: var(--surface-input);
     border: 1px solid var(--border-subtle);
     min-width: 60px;
+}
+
+#notifDrawer {
+    background-color: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    border-radius: 12px;
+}
+
+#notifContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notifContainer::-webkit-scrollbar-track {
+    background: var(--surface-card);
+}
+
+#notifContainer::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 4px;
+}
+
+#notifContainer::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}
+
+#notifContainer>div {
+    transition: background-color 0.2s ease;
+}
+
+#notifContainer>div:hover {
+    background-color: var(--surface-hover);
+}
+
+#statNotifications {
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
 }

@@ -1,398 +1,441 @@
-const SUPABASE_URL = "https://xswkxjymswnveppratwx.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzd2t4anltc3dudmVwcHJhdHd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3OTQ5NTYsImV4cCI6MjEwMjM3MDk1Nn0.sOZhMZMfIBXKn9QgcPLUz9rmpwlHfNE52Bu8RBXIki0";
+var supabase = window.supabase.createClient(
+    "https://xswkxjymswnveppratwx.supabase.co",
+    "sb_publishable_ML6SKo4r_uB6TzkQuK9gNQ_VPCKj-h1"
+);
 
-let _supabase = null;
-if (window.supabase && typeof window.supabase.createClient === 'function') {
-    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-    console.error("Supabase SDK not loaded properly. Check your script tags in HTML.");
-}
+let currentUserId = null;
+let allPostsData = [];
+let editingPostId = null;
+let editingExistingImageUrl = null;
 
-let currentUser = null;
-let editPostId = null;
+// Image Preview Handler
+window.previewImage = function (input) {
+    const container = document.getElementById('imagePreviewContainer');
+    const preview = document.getElementById('imagePreview');
+    const uploadText = document.getElementById('uploadText');
 
-function getUserDisplayName(user) {
-    if (!user) return "Anonymous";
-    if (typeof user === 'string') return user.split('@')[0];
-    return user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : "Anonymous");
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-    if (!_supabase) return;
-
-    const { data: { session }, error } = await _supabase.auth.getSession();
-
-    if (error || !session) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    currentUser = session.user;
-
-    const charBtn = document.getElementById("char");
-    if (charBtn && currentUser) {
-        const name = getUserDisplayName(currentUser);
-        charBtn.innerText = name.charAt(0).toUpperCase();
-    }
-
-    fetchPosts();
-});
-
-function toggleMenu() {
-    const menu = document.getElementById("dropdownMenu");
-    if (menu) menu.classList.toggle("show");
-}
-
-async function logout() {
-    if (_supabase) await _supabase.auth.signOut();
-    window.location.href = "login.html";
-}
-
-function previewImage(input) {
-    const previewContainer = document.getElementById("imagePreviewContainer");
-    const previewImage = document.getElementById("imagePreview");
-    const uploadText = document.getElementById("uploadText");
-
-    if (input.files && input.files[0]) {
+    if (input && input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            previewImage.src = e.target.result;
-            if (previewContainer) previewContainer.classList.remove("d-none");
+            if (preview) preview.src = e.target.result;
+            if (container) container.classList.remove('d-none');
+            if (uploadText) uploadText.textContent = "Change Image";
         };
         reader.readAsDataURL(input.files[0]);
-        if (uploadText) uploadText.innerText = "Change Image";
+    } else if (editingExistingImageUrl) {
+        if (preview) preview.src = editingExistingImageUrl;
+        if (container) container.classList.remove('d-none');
+        if (uploadText) uploadText.textContent = "Change Image";
     } else {
-        if (previewImage) previewImage.src = "";
-        if (previewContainer) previewContainer.classList.add("d-none");
-        if (uploadText) uploadText.innerText = "Add Image";
+        if (container) container.classList.add('d-none');
+        if (uploadText) uploadText.textContent = "Add Image";
     }
+};
+
+window.searchPosts = function (sourceInputId) {
+    const inputElement = document.getElementById(sourceInputId);
+    if (!inputElement) return;
+
+    const query = inputElement.value.toLowerCase().trim();
+    const navInput = document.getElementById('navSearchInput');
+    const feedInput = document.getElementById('feedSearchInput');
+    if (navInput) navInput.value = inputElement.value;
+    if (feedInput) feedInput.value = inputElement.value;
+
+    const filtered = allPostsData.filter(p =>
+        (p.title && p.title.toLowerCase().includes(query)) ||
+        (p.description && p.description.toLowerCase().includes(query)) ||
+        (p.author_name && p.author_name.toLowerCase().includes(query))
+    );
+
+    renderPosts(filtered);
+};
+
+// Create OR Update Post
+window.post = async function (e) {
+    if (e) e.preventDefault();
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const fileInput = document.getElementById('background-image');
+    const postBtn = document.getElementById('postBtn');
+
+    if (!title || !description) return;
+
+    postBtn.disabled = true;
+    postBtn.textContent = editingPostId ? 'Updating...' : 'Publishing...';
+
+    try {
+        let imageUrl = editingExistingImageUrl;
+
+        // Check if user selected a NEW image file
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `post_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+
+            // Upload image to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('posts')
+                .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+            if (uploadError) {
+                console.error("Storage upload error:", uploadError);
+                throw new Error("Image upload failed: " + uploadError.message);
+            }
+
+            // Fetch public URL
+            const { data: publicUrlData } = supabase.storage
+                .from('posts')
+                .getPublicUrl(fileName);
+
+            imageUrl = publicUrlData.publicUrl;
+        }
+
+        if (editingPostId) {
+            // Update Post
+            const { error: updateError } = await supabase
+                .from('posts')
+                .update({
+                    title: title,
+                    description: description,
+                    image_url: imageUrl
+                })
+                .eq('id', editingPostId);
+
+            if (updateError) throw updateError;
+        } else {
+            // Create Post
+            const { data: { session } } = await supabase.auth.getSession();
+            const metadata = session?.user?.user_metadata;
+            const authorName = metadata?.full_name || metadata?.first_name || localStorage.getItem('userName') || 'Student';
+
+            const { error: insertError } = await supabase.from('posts').insert([{
+                title: title,
+                description: description,
+                image_url: imageUrl,
+                user_id: currentUserId,
+                author_name: authorName
+            }]);
+
+            if (insertError) throw insertError;
+        }
+
+        resetFormState();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Saved Successfully!',
+            timer: 1500,
+            showConfirmButton: false,
+            background: '#1e293b',
+            color: '#f8fafc'
+        });
+
+        await loadAllPosts();
+
+    } catch (err) {
+        console.error("Post Operation Error:", err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'Failed to process post.',
+            background: '#1e293b',
+            color: '#f8fafc'
+        });
+    } finally {
+        postBtn.disabled = false;
+        if (!editingPostId) postBtn.textContent = 'Publish Post';
+    }
+};
+
+function resetFormState() {
+    editingPostId = null;
+    editingExistingImageUrl = null;
+    document.getElementById('postForm').reset();
+
+    const formTitle = document.getElementById('formTitle');
+    const postBtn = document.getElementById('postBtn');
+    const container = document.getElementById('imagePreviewContainer');
+    const uploadText = document.getElementById('uploadText');
+
+    if (formTitle) formTitle.textContent = "Create Post";
+    if (postBtn) postBtn.textContent = "Publish Post";
+    if (container) container.classList.add('d-none');
+    if (uploadText) uploadText.textContent = "Add Image";
 }
 
-async function post(event) {
-    event.preventDefault();
+// Edit Post Handler
+window.editPost = function (postId) {
+    const postToEdit = allPostsData.find(p => p.id === postId);
+    if (!postToEdit) return;
 
-    if (!_supabase) {
-        Swal.fire("Error", "Supabase client is not initialized.", "error");
+    editingPostId = postToEdit.id;
+    editingExistingImageUrl = postToEdit.image_url || null;
+
+    document.getElementById('title').value = postToEdit.title || '';
+    document.getElementById('description').value = postToEdit.description || '';
+
+    // Reset file input selection
+    const fileInput = document.getElementById('background-image');
+    if (fileInput) fileInput.value = '';
+
+    const formTitle = document.getElementById('formTitle');
+    const postBtn = document.getElementById('postBtn');
+    const uploadText = document.getElementById('uploadText');
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('imagePreviewContainer');
+
+    if (formTitle) formTitle.textContent = "Edit Post";
+    if (postBtn) postBtn.textContent = "Update Post";
+
+    if (editingExistingImageUrl) {
+        if (preview) preview.src = editingExistingImageUrl;
+        if (container) container.classList.remove('d-none');
+        if (uploadText) uploadText.textContent = "Change Image";
+    } else {
+        if (container) container.classList.add('d-none');
+        if (uploadText) uploadText.textContent = "Add Image";
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Delete Post
+window.deletePost = async function (postId) {
+    const confirm = await Swal.fire({
+        title: 'Delete post?',
+        text: "This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#334155',
+        confirmButtonText: 'Delete',
+        background: '#1e293b',
+        color: '#f8fafc'
+    });
+
+    if (confirm.isConfirmed) {
+        const { error } = await supabase.from('posts').delete().eq('id', postId);
+        if (!error) {
+            await loadAllPosts();
+        }
+    }
+};
+
+// Like Toggle
+window.likePost = function (postId) {
+    const likeBtn = document.getElementById(`like-btn-${postId}`);
+    if (likeBtn) {
+        likeBtn.classList.toggle('liked');
+        const icon = likeBtn.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('fa-regular');
+            icon.classList.toggle('fa-solid');
+        }
+    }
+};
+
+// Comment Box Toggle
+window.toggleCommentBox = async function (postId) {
+    const commentBox = document.getElementById(`comment-box-${postId}`);
+    if (commentBox) {
+        commentBox.classList.toggle('d-none');
+        if (!commentBox.classList.contains('d-none')) {
+            await loadComments(postId);
+        }
+    }
+};
+
+// Save Comment to Supabase
+window.addComment = async function (postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const text = input ? input.value.trim() : '';
+
+    if (!text) return;
+
+    try {
+        const { error } = await supabase.from('comments').insert([{
+            post_id: postId,
+            user_id: currentUserId,
+            text: text
+        }]);
+
+        if (error) {
+            console.error('Error adding comment:', error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Comment Error',
+                text: error.message,
+                background: '#1e293b',
+                color: '#f8fafc'
+            });
+            return;
+        }
+
+        input.value = '';
+        await loadComments(postId);
+
+    } catch (err) {
+        console.error("Comment submit error:", err);
+    }
+};
+
+// Load Comments
+async function loadComments(postId) {
+    const list = document.getElementById(`comments-list-${postId}`);
+    if (!list) return;
+
+    const { data: comments, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('Error loading comments:', error.message);
         return;
     }
 
-    const title = document.getElementById("title") ? document.getElementById("title").value.trim() : "";
-    const description = document.getElementById("description") ? document.getElementById("description").value.trim() : "";
-    const fileInput = document.getElementById("background-image");
-    const file = fileInput ? fileInput.files[0] : null;
+    if (!comments || comments.length === 0) {
+        list.innerHTML = `<p class="text-muted text-xs py-1 my-0">No comments yet.</p>`;
+        return;
+    }
 
-    let imageUrl = null;
+    list.innerHTML = comments.map(c => `
+        <div class="p-2 comment-box mt-1 text-light text-xs rounded border border-secondary">
+            ${c.text}
+        </div>
+    `).join('');
+}
 
-    Swal.fire({
-        title: editPostId ? "Updating Post..." : "Publishing Post...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
+// Initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    setupLogoutButton();
+    await loadAllPosts();
 
-    try {
-        if (file) {
-            const fileName = `${Date.now()}_${file.name}`;
-            const { error: uploadError } = await _supabase.storage
-                .from("post-images")
-                .upload(fileName, file);
+    const imageInput = document.getElementById('background-image');
+    if (imageInput) {
+        imageInput.addEventListener('change', function () {
+            window.previewImage(this);
+        });
+    }
+});
 
-            if (uploadError) throw uploadError;
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    const localLoggedIn = localStorage.getItem('isLoggedIn');
 
-            const { data: urlData } = _supabase.storage
-                .from("post-images")
-                .getPublicUrl(fileName);
+    if (!session && !localLoggedIn) {
+        window.location.href = "index.html";
+        return;
+    }
 
-            imageUrl = urlData.publicUrl;
-        }
-
-        const authorName = getUserDisplayName(currentUser);
-
-        if (editPostId) {
-            const updateData = { title, description };
-            if (imageUrl) updateData.image_url = imageUrl;
-
-            const { error } = await _supabase
-                .from("posts")
-                .update(updateData)
-                .eq("id", editPostId);
-
-            if (error) throw error;
-
-            Swal.fire("Updated!", "Your post has been updated.", "success");
-            editPostId = null;
-            const formTitle = document.getElementById("formTitle");
-            const postBtn = document.getElementById("postBtn");
-            if (formTitle) formTitle.innerText = "Create Post";
-            if (postBtn) postBtn.innerText = "Publish Post";
-        } else {
-            const { error } = await _supabase
-                .from("posts")
-                .insert([{
-                    title,
-                    description,
-                    image_url: imageUrl,
-                    user_id: currentUser.id,
-                    user_name: authorName,
-                    author_name: authorName
-                }]);
-
-            if (error) throw error;
-
-            Swal.fire("Published!", "Your post is live.", "success");
-        }
-
-        resetForm();
-        fetchPosts();
-
-    } catch (error) {
-        Swal.fire("Error", error.message, "error");
+    if (session && session.user) {
+        currentUserId = session.user.id;
     }
 }
 
-function resetForm() {
-    const postForm = document.getElementById("postForm");
-    if (postForm) postForm.reset();
-    const previewContainer = document.getElementById("imagePreviewContainer");
-    if (previewContainer) previewContainer.classList.add("d-none");
-    const uploadText = document.getElementById("uploadText");
-    if (uploadText) uploadText.innerText = "Add Image";
+function setupLogoutButton() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                await supabase.auth.signOut();
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userName');
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        });
+    }
 }
 
-async function fetchPosts() {
-    const postsContainer = document.getElementById("posts");
-    if (!postsContainer || !_supabase) return;
+async function loadAllPosts() {
+    const container = document.getElementById('posts');
+    if (!container) return;
 
-    postsContainer.innerHTML = '<div class="text-center text-secondary py-4"><i class="fa-solid fa-spinner fa-spin fs-3"></i></div>';
+    const { data: posts, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    try {
-        const { data: posts, error } = await _supabase
-            .from("posts")
-            .select("*")
-            .order("created_at", { ascending: false });
+    if (error) {
+        console.error('Error fetching posts:', error.message);
+        container.innerHTML = `<p class="text-danger text-center">Failed to load posts.</p>`;
+        return;
+    }
 
-        if (error) throw error;
+    allPostsData = posts || [];
+    renderPosts(allPostsData);
+}
 
-        postsContainer.innerHTML = "";
+function renderPosts(posts) {
+    const container = document.getElementById('posts');
+    if (!container) return;
 
-        if (!posts || posts.length === 0) {
-            postsContainer.innerHTML = '<p class="text-secondary text-center py-4">No posts found.</p>';
-            return;
-        }
+    if (posts.length === 0) {
+        container.innerHTML = `<p class="text-muted text-center py-4">No posts found.</p>`;
+        return;
+    }
 
-        for (const item of posts) {
-            const card = document.createElement("div");
-            card.className = "card post-card mb-4 shadow-lg";
-
-            // Forced to true so icons display for all database entries
-            const isOwner = true;
-            const authorDisplayName = item.author_name || item.user_name || (item.user_email ? item.user_email.split('@')[0] : "Anonymous");
-
-            card.innerHTML = `
-        <div class="card-header d-flex justify-content-between align-items-center py-2 px-3">
-          <small class="text-info fw-bold"><i class="fa-solid fa-user me-1"></i>${authorDisplayName}</small>
-          ${isOwner ? `
-            <div class="action-buttons">
-              <button class="btn btn-sm text-info p-1 me-2 edit-btn" title="Edit Post" onclick="editPost('${item.id}', '${escapeQuotes(item.title)}', '${escapeQuotes(item.description)}')">
-                <i class="fa-solid fa-pen-to-square fs-6"></i>
-              </button>
-              <button class="btn btn-sm text-danger p-1 delete-btn" title="Delete Post" onclick="deletePost('${item.id}')">
-                <i class="fa-solid fa-trash fs-6"></i>
-              </button>
-            </div>
-          ` : ""}
-        </div>
-        ${item.image_url ? `
-          <div class="text-center bg-dark p-2">
-            <img src="${item.image_url}" class="img-fluid rounded" style="max-height: 180px; object-fit: contain;" alt="Post image">
-          </div>
-        ` : ""}
-        <div class="card-body">
-          <h5 class="card-title post-title fw-bold text-info">${item.title}</h5>
-          <p class="card-text post-body text-light">${item.description || ""}</p>
-          
-          <div class="d-flex align-items-center mb-3">
-            <button class="btn btn-sm btn-outline-danger me-2 heart-btn" onclick="toggleLike(this, '${item.id}')">
-              <i class="fa-regular fa-heart me-1"></i><span class="like-text">Like</span>
-            </button>
-          </div>
-
-          <div class="mt-3 pt-3 border-top border-secondary">
-            <h6 class="small fw-bold text-secondary mb-2"><i class="fa-regular fa-comments me-1"></i> Comments</h6>
-            
-            <div id="comments-list-${item.id}" class="mb-3">
-              <small class="text-muted d-block mb-1">Loading comments...</small>
+    container.innerHTML = posts.map(post => `
+        <div class="card custom-card post-card mb-4 shadow-sm">
+            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-user text-info"></i>
+                    <span class="fw-bold text-info text-sm">${post.author_name || 'Student'}</span>
+                </div>
+                ${post.user_id === currentUserId ? `
+                    <div class="d-flex gap-2 align-items-center">
+                        <button onclick="editPost('${post.id}')" class="btn btn-link text-info p-0 border-0 me-2" title="Edit Post">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deletePost('${post.id}')" class="btn btn-link text-danger p-0 border-0" title="Delete Post">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                ` : ''}
             </div>
 
-            <div class="input-group input-group-sm">
-              <input type="text" id="comment-input-${item.id}" class="form-control bg-dark text-light border-secondary" placeholder="Write a comment...">
-              <button class="btn btn-info fw-bold" onclick="addComment('${item.id}')">
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
+            ${post.image_url ? `
+                <img src="${post.image_url}" class="post-img-large" alt="Post Image">
+            ` : ''}
+
+            <div class="card-body p-3">
+                <h5 class="fw-bold text-info mb-1">${post.title || 'Untitled'}</h5>
+                <p class="text-light mb-3 text-sm">${post.description || ''}</p>
+
+                <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary">
+                    <div class="d-flex align-items-center gap-3">
+                        <button id="like-btn-${post.id}" class="like-btn d-flex align-items-center gap-1 text-sm" onclick="likePost('${post.id}')">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>Like</span>
+                        </button>
+                        <button class="btn btn-link text-secondary p-0 text-decoration-none d-flex align-items-center gap-1 text-sm" onclick="toggleCommentBox('${post.id}')">
+                            <i class="fa-regular fa-comment text-info"></i>
+                            <span>Comment</span>
+                        </button>
+                    </div>
+                    <span class="text-muted text-xs">${post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Just now'}</span>
+                </div>
+
+                <div id="comment-box-${post.id}" class="mt-3 d-none">
+                    <div class="input-group">
+                        <input type="text" 
+                               id="comment-input-${post.id}" 
+                               class="form-control text-sm" 
+                               placeholder="Write a comment..." 
+                               onkeypress="if(event.key === 'Enter'){ event.preventDefault(); window.addComment('${post.id}'); }">
+                        <button type="button" 
+                                class="btn btn-info btn-sm fw-bold" 
+                                onclick="window.addComment('${post.id}')">Post</button>
+                    </div>
+                    <div id="comments-list-${post.id}" class="mt-2"></div>
+                </div>
             </div>
-          </div>
         </div>
-      `;
-
-            postsContainer.appendChild(card);
-            fetchComments(item.id);
-        }
-
-        if (typeof animatePollCards === 'function') {
-            animatePollCards();
-        }
-
-    } catch (error) {
-        postsContainer.innerHTML = `<p class="text-danger">Failed to load posts: ${error.message}</p>`;
-    }
-}
-
-function toggleLike(btn, postId) {
-    const icon = btn.querySelector("i");
-    const label = btn.querySelector(".like-text");
-
-    if (icon && icon.classList.contains("fa-regular")) {
-        icon.classList.remove("fa-regular");
-        icon.classList.add("fa-solid");
-        btn.classList.remove("btn-outline-danger");
-        btn.classList.add("btn-danger");
-        if (label) label.innerText = "Liked";
-    } else if (icon) {
-        icon.classList.remove("fa-solid");
-        icon.classList.add("fa-regular");
-        btn.classList.remove("btn-danger");
-        btn.classList.add("btn-outline-danger");
-        if (label) label.innerText = "Like";
-    }
-}
-
-function escapeQuotes(str) {
-    if (!str) return "";
-    return str
-        .replace(/\\/g, "\\\\")
-        .replace(/'/g, "\\'")
-        .replace(/"/g, "&quot;")
-        .replace(/\n/g, "\\n")
-        .replace(/\r/g, "");
-}
-
-function editPost(id, title, description) {
-    editPostId = id;
-    const titleInput = document.getElementById("title");
-    const descInput = document.getElementById("description");
-
-    if (titleInput) titleInput.value = title;
-    if (descInput) descInput.value = description;
-
-    const formTitle = document.getElementById("formTitle");
-    const postBtn = document.getElementById("postBtn");
-
-    if (formTitle) formTitle.innerText = "Edit Post";
-    if (postBtn) postBtn.innerText = "Update Post";
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-async function deletePost(id) {
-    const result = await Swal.fire({
-        title: "Delete this post?",
-        text: "This action cannot be undone.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#ef4444",
-        confirmButtonText: "Delete"
-    });
-
-    if (result.isConfirmed) {
-        try {
-            const { error } = await _supabase.from("posts").delete().eq("id", id);
-            if (error) throw error;
-            Swal.fire("Deleted", "Post removed successfully.", "success");
-            fetchPosts();
-        } catch (error) {
-            Swal.fire("Error", error.message, "error");
-        }
-    }
-}
-
-async function fetchComments(postId) {
-    const commentsList = document.getElementById(`comments-list-${postId}`);
-    if (!commentsList || !_supabase) return;
-
-    try {
-        const { data: comments, error } = await _supabase
-            .from("comments")
-            .select("*")
-            .eq("post_id", postId)
-            .order("created_at", { ascending: true });
-
-        if (error) throw error;
-
-        if (!comments || comments.length === 0) {
-            commentsList.innerHTML = '<span class="text-muted small">No comments yet.</span>';
-            return;
-        }
-
-        commentsList.innerHTML = comments.map(c => {
-            const commenterName = c.author_name || c.user_name || (c.user_email ? c.user_email.split('@')[0] : 'Anonymous');
-            return `
-      <div class="comment-box p-2 mb-2">
-        <div class="d-flex justify-content-between align-items-center">
-          <strong class="text-info small" style="font-size: 11px;">${commenterName}</strong>
-          <span class="text-muted" style="font-size: 10px;">${new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-        <p class="mb-0 text-light small">${c.comment_text || c.content || c.comment || ''}</p>
-      </div>
-    `;
-        }).join("");
-
-    } catch (error) {
-        commentsList.innerHTML = `<span class="text-danger small">Error loading comments.</span>`;
-    }
-}
-
-async function addComment(postId) {
-    const input = document.getElementById(`comment-input-${postId}`);
-    if (!input) return;
-    const commentText = input.value.trim();
-
-    if (!commentText) return;
-
-    const authorName = getUserDisplayName(currentUser);
-
-    try {
-        const { error } = await _supabase
-            .from("comments")
-            .insert([{
-                post_id: postId,
-                user_id: currentUser.id,
-                author_name: authorName,
-                comment_text: commentText
-            }]);
-
-        if (error) throw error;
-
-        input.value = "";
-        fetchComments(postId);
-
-    } catch (error) {
-        Swal.fire("Error", error.message, "error");
-    }
-}
-
-function searchPosts() {
-    const searchInput = document.getElementById("searchInput");
-    if (!searchInput) return;
-    const query = searchInput.value.toLowerCase();
-    const posts = document.querySelectorAll(".post-card");
-
-    posts.forEach((post) => {
-        const title = post.querySelector(".post-title")?.innerText.toLowerCase() || "";
-        const body = post.querySelector(".post-body")?.innerText.toLowerCase() || "";
-
-        if (title.includes(query) || body.includes(query)) {
-            post.style.display = "block";
-        } else {
-            post.style.display = "none";
-        }
-    });
+    `).join('');
 }

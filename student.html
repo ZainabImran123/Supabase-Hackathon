@@ -1,116 +1,124 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="student.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="student.css">
 </head>
 
-<body class="bg-gray-900 text-slate-100 min-h-screen">
+<body class="bg-[#090d16] text-[#f8fafc] min-h-screen">
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
-        <div class="text-xl font-bold text-cyan-400">Student Portal</div>
+    <nav class="navbar px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="stat-icon font-bold text-xl">S</div>
+            <h1 class="text-xl font-bold tracking-wide">Student<span class="accent-text">Dashboard</span></h1>
+        </div>
 
-        <div class="flex items-center gap-6">
-            <button id="markReadBtn" class="relative text-gray-300 hover:text-white transition">
-                🔔 <span id="statNotifications"
-                    class="absolute -top-2 -right-2 bg-red-500 text-[10px] font-bold text-white rounded-full px-1.5 py-0.5">3</span>
-            </button>
-
-            <div class="relative group">
-                <button
-                    class="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-650 transition">
-                    <div
-                        class="w-7 h-7 bg-cyan-500 rounded-full flex items-center justify-center font-bold text-gray-900">
-                        👤</div>
-                    <span id="profileBadgeName" class="font-medium text-slate-200">Student</span>
-                    <span class="text-xs text-gray-400">▼</span>
+        <div class="flex items-center gap-4">
+            <div class="relative">
+                <button id="notifBtn"
+                    class="relative p-2.5 rounded-xl bg-[#1f293d] border border-[#2d3748] hover:border-[#38bdf8] transition-all text-gray-300 hover:text-white">
+                    <i class="fa-solid fa-bell text-lg"></i>
+                    <span id="statNotifications"
+                        class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
                 </button>
 
-                <div
-                    class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl hidden group-hover:block z-50">
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg">Profile
-                        Settings</a>
-                    <button id="logoutBtn"
-                        class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-b-lg transition">Logout</button>
+                <div id="notifDrawer"
+                    class="hidden absolute right-0 mt-3 w-80 md:w-96 rounded-xl border border-[#2d3748] bg-[#111827] shadow-2xl z-50 overflow-hidden">
+                    <div class="p-3.5 border-b border-[#2d3748] flex justify-between items-center bg-[#1f293d]/50">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-sm text-white">Notifications</h3>
+                        </div>
+                        <button id="markReadBtn" class="text-xs text-[#22d3ee] hover:underline font-medium">Mark all
+                            read</button>
+                    </div>
+                    <div id="notifContainer" class="max-h-80 overflow-y-auto divide-y divide-[#2d3748]/50">
+                        <p class="p-4 text-xs text-gray-400 text-center">Loading notifications...</p>
+                    </div>
                 </div>
             </div>
+
+            <div class="flex items-center gap-2.5 bg-[#1f293d] border border-[#2d3748] px-3 py-1.5 rounded-xl">
+                <div
+                    class="w-8 h-8 rounded-lg bg-[#22d3ee]/20 text-[#22d3ee] flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <span id="profileBadgeName" class="text-sm font-semibold text-slate-200">Student</span>
+            </div>
+
+            <button id="logoutBtn"
+                class="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-sm">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <div class="md:col-span-2 space-y-6">
-
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-white">Welcome, <span id="userName"
-                            class="text-cyan-400">Student</span>!</h1>
-                    <p class="text-gray-400 text-sm mt-1">Explore all community activity, events, and announcements.</p>
-                </div>
-                <button id="createPostBtn"
-                    class="bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-bold px-4 py-2 rounded-lg text-sm transition">
-                    + Create Post
-                </button>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3">
-                <button id="createEventBtn"
-                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition flex items-center justify-center gap-2">
-                    📅 Create Event
-                </button>
-                <button id="pollBtn"
-                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition flex items-center justify-center gap-2">
-                    📊 Make Poll
-                </button>
-                <button id="findPartnerBtn"
-                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition flex items-center justify-center gap-2">
-                    🤝 Find Study Partner
-                </button>
-            </div>
-
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="card p-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h2 class="text-lg font-semibold mb-4 text-cyan-400 flex items-center gap-2">
-                    <span>💬</span> Community Feed
+                <h2 class="text-2xl font-bold">Welcome back, <span id="userName" class="accent-text">Student</span>!
                 </h2>
+                <p class="text-custom-muted text-sm mt-1">Check out today's campus updates, upcoming events, and peer
+                    requests.</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2.5 w-full md:w-auto">
+                <button id="createPostBtn" class="btn-action text-xs flex-1 md:flex-initial">
+                    <i class="fa-solid fa-plus"></i> New Post
+                </button>
+                <button id="createEventBtn" class="btn-action text-xs flex-1 md:flex-initial">
+                    <i class="fa-solid fa-calendar-plus"></i> New Event
+                </button>
+                <button id="findPartnerBtn" class="btn-action text-xs flex-1 md:flex-initial">
+                    <i class="fa-solid fa-users"></i> Find Partner
+                </button>
+                <button id="pollBtn" class="btn-action text-xs flex-1 md:flex-initial">
+                    <i class="fa-solid fa-square-poll-vertical"></i> Polls
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-newspaper text-[#22d3ee]"></i> Campus Activity Feed
+                    </h3>
+                </div>
                 <div id="postsContainer">
-                    <p class="text-gray-500 text-sm">Loading posts...</p>
+                    <p class="text-custom-muted text-sm">Loading posts...</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="card p-5">
+                    <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-[#22d3ee]"></i> Upcoming Events
+                    </h3>
+                    <div id="eventsContainer">
+                        <p class="text-custom-muted text-xs">Loading events...</p>
+                    </div>
+                </div>
+
+                <div class="card p-5">
+                    <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn text-[#22d3ee]"></i> Announcements
+                    </h3>
+                    <div id="announcementsContainer">
+                        <p class="text-custom-muted text-xs">Loading announcements...</p>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="space-y-6">
-
-            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                <h3 class="text-base font-semibold text-cyan-400 mb-3 flex items-center gap-2">
-                    <span>📢</span> Announcements
-                </h3>
-                <div id="announcementsContainer">
-                    <p class="text-gray-500 text-xs">Loading announcements...</p>
-                </div>
-            </div>
-
-            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
-                <h3 class="text-base font-semibold text-cyan-400 mb-3 flex items-center gap-2">
-                    <span>📅</span> Upcoming Events
-                </h3>
-                <div id="eventsContainer">
-                    <p class="text-gray-500 text-xs">Loading events...</p>
-                </div>
-            </div>
-
-        </div>
-
     </main>
 
     <script src="student.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="animations.js"></script>
 </body>
 
 </html>

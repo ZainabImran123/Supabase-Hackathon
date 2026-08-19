@@ -12,13 +12,93 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
+/* Base Navbar Container */
 .navbar {
     background-color: var(--bg-surface) !important;
     border-bottom: 1px solid var(--border-color);
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
 }
 
+/* Layout Utility Classes for Navbar Elements */
+.d-flex {
+    display: flex !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+.justify-content-between {
+    justify-content: space-between !important;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.gap-3 {
+    gap: 0.75rem !important;
+}
+
+.flex-1 {
+    flex: 1 1 0% !important;
+}
+
+.shrink-0 {
+    flex-shrink: 0 !important;
+}
+
+.max-w-7xl {
+    max-width: 80rem !important;
+    width: 100%;
+}
+
+.max-w-md {
+    max-width: 28rem !important;
+}
+
+.stat-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    background-color: rgba(56, 189, 248, 0.1);
+    color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.accent-text {
+    color: var(--accent-blue);
+}
+
+/* Logout Button Positioning Fix */
+#logoutBtn {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#logoutBtn:hover {
+    background-color: var(--heart-red);
+    color: #ffffff;
+}
+
+/* Cards & Feeds Structure */
 .custom-card,
 .post-card {
     background-color: var(--bg-surface);
@@ -32,14 +112,14 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* Larger featured image display */
 .post-img-large {
     width: 100%;
-    height: 400px;
+    height: 250px;
     object-fit: cover;
     display: block;
 }
 
+/* Form Inputs & Controls */
 .form-control {
     background-color: var(--bg-primary) !important;
     border-color: var(--border-color) !important;
@@ -55,6 +135,7 @@ body {
     color: var(--text-muted);
 }
 
+/* Custom Image Upload Button */
 .upload-btn-wrapper {
     position: relative;
     overflow: hidden;

@@ -7,7 +7,6 @@
     <title>PostApp</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,24 +18,50 @@
 
 <body>
 
-    <nav class="navbar navbar-dark px-4 mb-4 d-flex justify-content-between align-items-center">
-        <h3 class="navbar-brand fw-bold text-info m-0">
-            <i class="fa-solid fa-layer-group me-2"></i>Community Posts
-        </h3>
-        <div class="position-relative">
-            <button id="char" class="btn btn-info rounded-circle fw-bold" onclick="toggleMenu()">U</button>
-            <div id="dropdownMenu"
-                class="dropdown-menu dropdown-menu-end position-absolute mt-2 p-2 bg-dark border border-secondary">
-                <button class="dropdown-item text-danger" onclick="logout()">
-                    <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+    <!-- Navbar Container -->
+    <nav class="navbar px-4 py-3">
+        <div class="container-fluid max-w-7xl d-flex align-items-center justify-content-between gap-3">
+
+            <!-- Left: Brand Title -->
+            <div class="d-flex align-items-center gap-2">
+                <div class="stat-icon font-bold fs-5">S</div>
+                <h1 class="fs-5 fw-bold text-white mb-0">Community <span class="accent-text">Posts</span></h1>
+            </div>
+
+            <!-- Center: Search Input -->
+            <!-- <div class="flex-1 max-w-md d-none d-sm-block">
+                <div class="position-relative d-flex align-items-center">
+                    <input type="text" id="navSearchInput" placeholder="Search posts..."
+                        class="form-control w-100 pe-5 text-sm" onkeyup="searchPosts('navSearchInput')">
+                    <button class="btn btn-info position-absolute end-0 top-0 bottom-0 px-3 fw-bold rounded-start-0"
+                        onclick="searchPosts('navSearchInput')">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </div> -->
+
+            <!-- Right: Profile Avatar & Logout Button -->
+            <div class="d-flex align-items-center gap-3 shrink-0">
+                <div class="w-9 h-9 rounded-circle bg-info text-dark fw-bold d-flex align-items-center justify-content-center text-sm shadow-sm"
+                    style="width:36px; height:36px;">
+                    A
+                </div>
+
+                <button id="logoutBtn"
+                    class="btn px-3 py-1-5 rounded-3 text-xs fw-semibold d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
                 </button>
             </div>
+
         </div>
     </nav>
 
-    <div class="container">
+    <!-- Main Content Container -->
+    <div class="container my-4">
         <div class="row">
 
+            <!-- Left Column: Create Post Form -->
             <div class="col-md-5 mb-4">
                 <div class="card custom-card p-4 shadow-lg">
                     <h4 id="formTitle" class="fw-bold mb-3 text-info">Create Post</h4>
@@ -70,17 +95,19 @@
                             </div>
                         </div>
 
-                        <button type="submit" id="postBtn" class="btn btn-info w-100 fw-bold py-2 mt-2">Publish
-                            Post</button>
+                        <button type="submit" id="postBtn" class="btn btn-info w-100 fw-bold py-2 mt-2">
+                            Publish Post
+                        </button>
                     </form>
                 </div>
             </div>
 
+            <!-- Right Column: Posts Feed & Search -->
             <div class="col-md-7">
                 <div class="input-group mb-4 shadow-sm">
-                    <input type="text" id="searchInput" class="form-control py-2" placeholder="Search posts..."
-                        onkeyup="searchPosts()">
-                    <button class="btn btn-info px-4 fw-bold" onclick="searchPosts()">
+                    <input type="text" id="feedSearchInput" class="form-control py-2" placeholder="Search posts..."
+                        onkeyup="searchPosts('feedSearchInput')">
+                    <button class="btn btn-info px-4 fw-bold" onclick="searchPosts('feedSearchInput')">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
@@ -90,6 +117,7 @@
 
         </div>
     </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="animations.js"></script>

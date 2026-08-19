@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
+    <link rel="stylesheet" href="student.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,30 +13,25 @@
 
 <body class="bg-gray-900 text-slate-100 min-h-screen">
 
-    <!-- TOP NAVBAR -->
     <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
         <div class="text-xl font-bold text-cyan-400">Student Portal</div>
 
         <div class="flex items-center gap-6">
-            <!-- Notification Icon -->
             <button id="markReadBtn" class="relative text-gray-300 hover:text-white transition">
                 🔔 <span id="statNotifications"
                     class="absolute -top-2 -right-2 bg-red-500 text-[10px] font-bold text-white rounded-full px-1.5 py-0.5">3</span>
             </button>
 
-            <!-- Profile Dropdown -->
             <div class="relative group">
                 <button
                     class="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-650 transition">
                     <div
                         class="w-7 h-7 bg-cyan-500 rounded-full flex items-center justify-center font-bold text-gray-900">
                         👤</div>
-                    <!-- Profile Badge Text (Replaces "ah") -->
                     <span id="profileBadgeName" class="font-medium text-slate-200">Student</span>
                     <span class="text-xs text-gray-400">▼</span>
                 </button>
 
-                <!-- Dropdown Menu -->
                 <div
                     class="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl hidden group-hover:block z-50">
                     <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg">Profile
@@ -47,13 +43,10 @@
         </div>
     </nav>
 
-    <!-- MAIN DASHBOARD CONTENT -->
     <main class="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        <!-- LEFT & CENTER FEED (2 COLUMNS) -->
         <div class="md:col-span-2 space-y-6">
 
-            <!-- Welcome Header Card -->
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-white">Welcome, <span id="userName"
@@ -66,19 +59,21 @@
                 </button>
             </div>
 
-            <!-- Page Navigation Quick Bar -->
-            <div class="flex gap-4">
+            <div class="flex flex-col sm:flex-row gap-3">
                 <button id="createEventBtn"
-                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition">
+                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition flex items-center justify-center gap-2">
                     📅 Create Event
                 </button>
+                <button id="pollBtn"
+                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition flex items-center justify-center gap-2">
+                    📊 Make Poll
+                </button>
                 <button id="findPartnerBtn"
-                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition">
-                    🔍 Want to make Poll
+                    class="bg-gray-800 hover:bg-gray-700 text-slate-200 border border-gray-700 px-4 py-2.5 rounded-lg text-sm flex-1 font-medium transition flex items-center justify-center gap-2">
+                    🤝 Find Study Partner
                 </button>
             </div>
 
-            <!-- Posts Feed Section -->
             <div>
                 <h2 class="text-lg font-semibold mb-4 text-cyan-400 flex items-center gap-2">
                     <span>💬</span> Community Feed
@@ -89,10 +84,8 @@
             </div>
         </div>
 
-        <!-- RIGHT SIDEBAR (1 COLUMN) -->
         <div class="space-y-6">
 
-            <!-- Campus Announcements Widget -->
             <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
                 <h3 class="text-base font-semibold text-cyan-400 mb-3 flex items-center gap-2">
                     <span>📢</span> Announcements
@@ -102,7 +95,6 @@
                 </div>
             </div>
 
-            <!-- Upcoming Events Widget -->
             <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
                 <h3 class="text-base font-semibold text-cyan-400 mb-3 flex items-center gap-2">
                     <span>📅</span> Upcoming Events

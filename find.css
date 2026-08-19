@@ -1,0 +1,122 @@
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --accent-color: #0ea5e9;
+    --text-light: #f8fafc;
+    --border-color: #334155;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+.navbar {
+    background-color: var(--card-bg) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-control,
+.form-select {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.form-control::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(14, 165, 233, 0.25) !important;
+}
+
+.avatar-upload-box {
+    width: 80px;
+    height: 80px;
+    border: 2px dashed var(--accent-color);
+    border-radius: 50%;
+    background-color: #0f172a;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.avatar-upload-box:hover {
+    background-color: rgba(14, 165, 233, 0.1);
+    border-color: #38bdf8;
+}
+
+.card,
+.partner-card,
+.partner-form-card {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.partner-card {
+    height: 100%;
+}
+
+.partner-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+.partner-avatar {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--accent-color);
+    background-color: var(--bg-dark);
+}
+
+.badge-course {
+    background-color: rgba(14, 165, 233, 0.2) !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--accent-color);
+    border-radius: 6px;
+}
+
+.badge-topic {
+    background-color: rgba(248, 250, 252, 0.08) !important;
+    color: var(--text-light) !important;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.btn-accent {
+    background-color: var(--accent-color) !important;
+    color: #ffffff !important;
+    border: none;
+    font-weight: 600;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.btn-accent:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-outline-accent {
+    background-color: transparent !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--accent-color) !important;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-accent:hover {
+    background-color: var(--accent-color) !important;
+    color: #ffffff !important;
+}

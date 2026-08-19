@@ -51,6 +51,7 @@ function setupNavigationButtons() {
     const createPostBtn = document.getElementById('createPostBtn');
     const createEventBtn = document.getElementById('createEventBtn');
     const findPartnerBtn = document.getElementById('findPartnerBtn');
+    const pollBtn = document.getElementById('pollBtn');
 
     if (createPostBtn) {
         createPostBtn.addEventListener('click', () => {
@@ -66,6 +67,12 @@ function setupNavigationButtons() {
 
     if (findPartnerBtn) {
         findPartnerBtn.addEventListener('click', () => {
+            window.location.href = "find.html";
+        });
+    }
+
+    if (pollBtn) {
+        pollBtn.addEventListener('click', () => {
             window.location.href = "poll.html";
         });
     }
@@ -86,21 +93,25 @@ async function loadAllPosts() {
         return;
     }
 
-    if (posts.length === 0) {
+    if (!posts || posts.length === 0) {
         container.innerHTML = `<p class="text-gray-400 text-sm">No posts available yet.</p>`;
         return;
     }
 
     container.innerHTML = posts.map(post => `
         <div class="bg-gray-800 p-5 rounded-xl mb-4 text-white border border-gray-700 shadow-md">
-            <h3 class="text-xl font-bold text-cyan-400">${post.title}</h3>
-            <p class="text-gray-300 mt-2 text-sm leading-relaxed">${post.description}</p>
+            <h3 class="text-xl font-bold text-cyan-400">${post.title || 'Untitled Post'}</h3>
+            <p class="text-gray-300 mt-2 text-sm leading-relaxed">${post.description || ''}</p>
             <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-700/50 text-xs text-gray-400">
                 <span class="font-medium text-slate-300">By ${post.author_name || 'Anonymous'}</span>
-                <span>${new Date(post.created_at).toLocaleDateString()}</span>
+                <span>${post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Just now'}</span>
             </div>
         </div>
     `).join('');
+
+    if (typeof window.animatePostCards === 'function') {
+        window.animatePostCards();
+    }
 }
 
 async function loadAllEvents() {
@@ -117,7 +128,7 @@ async function loadAllEvents() {
         return;
     }
 
-    if (events.length === 0) {
+    if (!events || events.length === 0) {
         container.innerHTML = `<p class="text-gray-400 text-xs">No upcoming events.</p>`;
         return;
     }
@@ -125,12 +136,12 @@ async function loadAllEvents() {
     container.innerHTML = events.map(evt => `
         <div class="bg-gray-800 p-3 rounded-lg mb-3 border border-gray-700 flex items-center gap-4">
             <div class="bg-cyan-500 text-gray-900 font-bold p-2 rounded text-center min-w-[50px]">
-                <div class="text-[10px] uppercase tracking-wider">${evt.event_month}</div>
-                <div class="text-base leading-none">${evt.event_date}</div>
+                <div class="text-[10px] uppercase tracking-wider">${evt.event_month || 'DEC'}</div>
+                <div class="text-base leading-none">${evt.event_date || '15'}</div>
             </div>
             <div>
-                <h4 class="font-bold text-white text-sm">${evt.title}</h4>
-                <p class="text-xs text-gray-400 mt-0.5">${evt.time_and_location}</p>
+                <h4 class="font-bold text-white text-sm">${evt.title || 'Event'}</h4>
+                <p class="text-xs text-gray-400 mt-0.5">${evt.time_and_location || 'Campus'}</p>
             </div>
         </div>
     `).join('');
@@ -150,7 +161,7 @@ async function loadAllAnnouncements() {
         return;
     }
 
-    if (announcements.length === 0) {
+    if (!announcements || announcements.length === 0) {
         container.innerHTML = `<p class="text-gray-400 text-xs">No announcements.</p>`;
         return;
     }
@@ -160,8 +171,8 @@ async function loadAllAnnouncements() {
             <span class="inline-block bg-cyan-950 text-cyan-400 text-[10px] font-semibold px-2 py-0.5 rounded border border-cyan-800/50 mb-1">
                 ${anc.category || 'General'}
             </span>
-            <h4 class="font-semibold text-white text-sm">${anc.title}</h4>
-            <p class="text-xs text-gray-300 mt-1">${anc.description}</p>
+            <h4 class="font-semibold text-white text-sm">${anc.title || 'Announcement'}</h4>
+            <p class="text-xs text-gray-300 mt-1">${anc.description || ''}</p>
         </div>
     `).join('');
 }

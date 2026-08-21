@@ -283,8 +283,18 @@ async function deletePost(id) {
 
     if (result.isConfirmed) {
         try {
-            const { error } = await _supabase.from("posts").delete().eq("id", id);
+            const { error, count } = await _supabase
+                .from("posts")
+                .delete({ count: 'exact' })
+                .eq("id", id);
+
             if (error) throw error;
+
+            if (count === 0) {
+                Swal.fire("Action Denied", "Post could not be deleted. Check RLS policies.", "error");
+                return;
+            }
+
             Swal.fire("Purged", "Post removed by Admin.", "success");
             fetchPosts();
             fetchMetrics();
@@ -314,11 +324,13 @@ async function fetchComments(postId) {
 
         commentsList.innerHTML = comments.map(c => {
             const commenterName = c.author_name || c.user_name || (c.user_email ? c.user_email.split('@')[0] : 'Anonymous');
+            const bodyContent = c.content || c.comment_text || c.comment || '';
+
             return `
       <div class="comment-box p-2 mb-2 d-flex justify-content-between align-items-center">
         <div>
           <strong class="text-info small" style="font-size: 11px;">${commenterName}</strong>
-          <p class="mb-0 text-light small">${c.comment_text || c.content || c.comment || ''}</p>
+          <p class="mb-0 text-light small">${bodyContent}</p>
         </div>
         <button class="btn btn-sm text-danger p-0 ms-2" title="Delete Comment" onclick="deleteComment('${c.id}', '${postId}')">
             <i class="fa-solid fa-xmark fs-6"></i>
@@ -334,8 +346,18 @@ async function fetchComments(postId) {
 
 async function deleteComment(commentId, postId) {
     try {
-        const { error } = await _supabase.from("comments").delete().eq("id", commentId);
+        const { error, count } = await _supabase
+            .from("comments")
+            .delete({ count: 'exact' })
+            .eq("id", commentId);
+
         if (error) throw error;
+
+        if (count === 0) {
+            Swal.fire("Action Denied", "Comment could not be deleted. Check RLS policies.", "error");
+            return;
+        }
+
         fetchComments(postId);
         fetchMetrics();
     } catch (error) {
@@ -359,7 +381,8 @@ async function addComment(postId) {
                 post_id: postId,
                 user_id: currentUser.id,
                 author_name: authorName,
-                comment_text: commentText
+                user_name: authorName,
+                content: commentText
             }]);
 
         if (error) throw error;

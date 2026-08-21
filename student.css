@@ -1,129 +1,157 @@
+/* --- Light Theme CSS Variables --- */
 :root {
-    --bg-space: #090d16;
-    --surface-card: #111827;
-    --surface-input: #1f293d;
-    --surface-hover: #27354f;
-    --border-subtle: #2d3748;
-    --border-focus: #38bdf8;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --primary-accent: #22d3ee;
-    --primary-hover: #06b6d4;
-    --shadow-glow: 0 0 25px rgba(34, 211, 238, 0.15);
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-secondary: #f1f5f9;
+    --border-color: #e2e8f0;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+
+    --accent-cyan: #0284c7;
+    --accent-cyan-light: #e0f2fe;
+    --accent-cyan-hover: #0369a1;
+    --accent-red: #ef4444;
 }
 
+/* --- Global Background & Text --- */
 body {
-    background-color: var(--bg-space);
-    color: var(--text-main);
+    background-color: var(--bg-main) !important;
+    color: var(--text-primary) !important;
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* --- Header / Navbar --- */
+header,
+nav,
 .navbar {
-    background-color: var(--surface-card);
-    border-bottom: 1px solid var(--border-subtle);
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color) !important;
 }
 
-.card {
-    background-color: var(--surface-card);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-main);
-    border-radius: 12px;
-    box-shadow: var(--shadow-glow);
+.logo-text,
+.brand-title {
+    color: var(--text-primary) !important;
 }
 
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    background-color: rgba(34, 211, 238, 0.1);
-    color: var(--primary-accent);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-}
-
-.btn-action {
-    background-color: var(--surface-input);
-    color: var(--text-main);
-    border: 1px solid var(--border-subtle);
-    padding: 10px 16px;
-    border-radius: 8px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-action:hover {
-    background-color: var(--primary-accent);
-    color: var(--bg-space);
-    border-color: var(--primary-accent);
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
-}
-
-.list-group-item {
-    background-color: transparent;
-    border-color: var(--border-subtle);
-    color: var(--text-muted);
-    padding: 14px 16px;
-}
-
-.badge-cyan {
-    background-color: rgba(34, 211, 238, 0.15);
-    color: var(--primary-accent);
-    border: 1px solid rgba(34, 211, 238, 0.3);
-}
-
-.text-custom-muted {
-    color: var(--text-muted);
-}
-
+.logo-text span,
 .accent-text {
-    color: var(--primary-accent);
+    color: var(--accent-cyan) !important;
 }
 
+/* --- Hero & Card Containers --- */
+.card,
+.dashboard-card,
+.feed-card,
+.event-card,
+.hero-banner {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Sub-containers inside cards */
+.hero-banner,
+.welcome-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+}
+
+.event-item,
+.post-item {
+    background-color: var(--bg-card-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* --- Text Styling --- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.card-title,
+.post-title {
+    color: var(--text-primary) !important;
+}
+
+p,
+.post-content,
+.card-subtitle,
+.author-name {
+    color: var(--text-secondary) !important;
+}
+
+.date-text,
+.timestamp,
+.meta-text {
+    color: var(--text-muted) !important;
+}
+
+/* --- Buttons & Badges --- */
+.btn-cyan,
+.btn-primary,
+button[type="submit"] {
+    background-color: var(--accent-cyan) !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.btn-cyan:hover,
+.btn-primary:hover {
+    background-color: var(--accent-cyan-hover) !important;
+}
+
+.btn-outline,
+.action-btn {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.btn-outline:hover {
+    background-color: var(--bg-card-secondary) !important;
+}
+
+/* Event Date Badges */
+.date-badge,
 .event-date-box {
-    background-color: var(--surface-input);
-    border: 1px solid var(--border-subtle);
-    min-width: 60px;
+    background-color: var(--accent-cyan-light) !important;
+    color: var(--accent-cyan) !important;
+    border-radius: 6px;
 }
 
-#notifDrawer {
-    background-color: var(--surface-card);
-    border: 1px solid var(--border-subtle);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), var(--shadow-glow);
-    border-radius: 12px;
+/* --- Input Fields & Comments --- */
+input,
+textarea,
+.comment-input,
+.search-bar {
+    background-color: var(--bg-card-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
 }
 
-#notifContainer::-webkit-scrollbar {
-    width: 6px;
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-muted) !important;
 }
 
-#notifContainer::-webkit-scrollbar-track {
-    background: var(--surface-card);
+input:focus,
+textarea:focus {
+    background-color: #ffffff !important;
+    border-color: var(--accent-cyan) !important;
+    outline: none !important;
 }
 
-#notifContainer::-webkit-scrollbar-thumb {
-    background: var(--border-subtle);
-    border-radius: 4px;
+/* Icons & Logout */
+.icon-btn,
+.notification-icon {
+    background-color: var(--bg-card-secondary) !important;
+    color: var(--text-primary) !important;
 }
 
-#notifContainer::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-accent);
-}
-
-#notifContainer>div {
-    transition: background-color 0.2s ease;
-}
-
-#notifContainer>div:hover {
-    background-color: var(--surface-hover);
-}
-
-#statNotifications {
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+.logout-btn {
+    background-color: #fee2e2 !important;
+    color: var(--accent-red) !important;
 }
